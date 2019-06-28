@@ -39,8 +39,8 @@ sqoop import --connect jdbc:mysql://localhost/nsdba2_superstore \
 
 
 
-# Fullcode for CA1 #password : singaporePOLY
-sqoop import --connect jdbc:mysql://nsdba2.thetechplorer.com/nsdba2_superstore \
+# Fullcode for CA1 #password :xxx
+sqoop import --connect jdbc: xxx \
 
     --username nsdba2_user -P \
 
