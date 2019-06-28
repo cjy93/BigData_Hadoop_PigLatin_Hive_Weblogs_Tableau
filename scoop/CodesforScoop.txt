@@ -1,0 +1,124 @@
+-- old method part 1 
+sqoop import --connect jdbc:mysql://localhost/nsdba2_superstore \
+    --username root -P \
+    --query 'CREATE TABLE new_tbl SELECT DATE_FORMAT(Orders.orderdate, "%c/%e/%Y") AS orderdate ,OrderDetails.productid,Products.ProductName,OrderDetails.orderquantity,
+FORMAT(OrderDetails.price,2) AS orderprice,Customers.customerid,Customers.first_name AS customername
+ FROM OrderDetails 
+INNER JOIN (Orders INNER JOIN Customers ON Customers.customerid= Orders.customerid)
+ON OrderDetails.orderid = Orders.orderid
+ INNER JOIN Products 
+ON OrderDetails.productid = Products.ProductID 
+WHERE $CONDITIONS AND orderdate BETWEEN '2018-01-26' AND '2018-01-30' 
+ORDER BY Orders.orderdate DESC
+ ' \
+    --split-by OrderDetails.productid \
+    --hive-import --hive-table bakeinc\
+    --target-dir /bakeinc/ordersdata 
+
+
+
+-- old method part 1
+sqoop import --connect jdbc:mysql://localhost/nsdba2_superstore \
+    --username root -P \
+    --table new_tbl \
+    --split-by orderdate \
+    --hive-import \
+    --delete-target-dir \
+    --target-dir /bakeinc/ordersdata 
+
+-- old method part 1
+sqoop import --connect jdbc:mysql://localhost/nsdba2_superstore \
+    --username root -P \
+    --table new_tbl \
+    --split-by orderdate \
+    --delete-target-dir \
+    --target-dir /bakeinc/ordersdata 
+
+
+
+
+
+
+# Fullcode for CA1 #password : singaporePOLY
+sqoop import --connect jdbc:mysql://nsdba2.thetechplorer.com/nsdba2_superstore \
+
+    --username nsdba2_user -P \
+
+    --query 'SELECT DATE_FORMAT(orders.orderdate, "%c/%e/%Y") AS orderdate, orders.orderdate as orderdate_string ,orderdetails.productid,products.ProductName,orderdetails.orderquantity,
+FORMAT(orderdetails.orderprice,2) ,customers.customerid,customers.first_name AS customername
+ FROM orderdetails 
+INNER JOIN (orders INNER JOIN customers ON customers.customerid= orders.customerid) 
+ON orderdetails.orderid = orders.orderid
+ INNER JOIN products 
+ON orderdetails.productid = products.ProductID 
+WHERE $CONDITIONS AND orders.orderdate BETWEEN "2018-01-26" AND "2018-01-31"
+ ORDER BY orders.orderdate DESC
+ ' \
+
+    --split-by customers.customerid \
+    --delete-target-dir \
+    --target-dir /bakeinc/ordersdata_temp \
+    --fields-terminated-by ',' \
+    --hive-import \
+    --hive-database nsdba2_superstore \
+    --hive-table ordersdata \
+    --hive-overwrite
+
+    
+
+# Fullcode for CA1 with SQL server/dump
+```
+1)in Hive
+```
+CREATE DATABASE IF NOT EXISTS nsdba2_superstore; --run this separately first
+
+CREATE TABLE nsdba2_superstore.ordersdata(
+orderdate STRING,
+productid INT,
+productname STRING,
+orderquantity INT,
+orderprice DOUBLE,
+customerid INT,
+customername STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/bakeinc/ordersdata'
+
+```
+2) in console on Cloudera
+```
+# version with date as string
+#format(OrderDetails.price,2) means 2 dp
+sqoop import --connect jdbc:mysql://localhost/nsdba2_superstore --username root -P --query 'SELECT DATE_FORMAT(orders.orderdate, "%Y-%c-%e") AS orderdate,orderdetails.productid,products.ProductName,orderdetails.orderquantity,
+FORMAT(orderdetails.orderprice,2) ,customers.customerid,concat(customers.first_name, " ", customers.gender) as customername
+ 
+FROM orderdetails 
+INNER JOIN (orders INNER JOIN customers ON customers.customerid= orders.customerid) 
+ON orderdetails.orderid = orders.orderid
+ INNER JOIN products 
+ON orderdetails.productid = products.ProductID 
+WHERE $CONDITIONS AND orders.orderdate BETWEEN "2018-01-26" AND "2018-01-31"' \
+--split-by customers.customerid \
+    --delete-target-dir \
+    --target-dir /bakeinc/ordersdata_temp \
+    --fields-terminated-by ',' \
+    --hive-import \
+    --hive-database nsdba2_superstore \
+    --hive-table ordersdata \
+    --hive-overwrite
+
+````
+# 1) Version with date in dateformat, HIVE type format
+# In hive
+````
+CREATE DATABASE IF NOT EXISTS nsdba2_superstore1;
+
+CREATE TABLE
+orderdate DATE,
+productid INT,
+productname STRING,
+orderquantity INT,
+orderprice DOUBLE,
+customerid INT,
+customername STRING

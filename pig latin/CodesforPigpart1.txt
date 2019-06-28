@@ -1,0 +1,40 @@
+#To store files into HDFS, we first have the files in our home #directory of fs then use "pig" in hdfs.  (Not to use HDFS to #pig then to Hive)
+#first create the hdfs directory
+
+
+```
+#rm -r -f /home/cloudera/ca1/bdp
+```
+
+```
+#ls /home/cloudera/ca1/bdp
+```
+First create a table in the database nsdba2_superstore and then create the table “weather”.
+```
+CREATE DATABASE IF NOT EXISTS nsdba2_superstore;
+
+CREATE TABLE nsdba2_superstore.weather(
+temp_date TIMESTAMP,
+temp_year INT,
+temp_month INT,
+temp_max DOUBLE,
+temp_min DOUBLE
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/bakeinc/weather';
+
+```
+```
+
+```
+
+After run the file 'CodesForPigPart2.txt' inside the command line
+Run this again
+
+```
+hdfs dfs -ls /home/cloudera/CA1
+```
+```
+hdfs dfs -cat /home/cloudera/CA1/final/*
+```

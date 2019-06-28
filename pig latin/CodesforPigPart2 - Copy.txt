@@ -1,0 +1,62 @@
+--Part 2\
+pig -x local
+
+
+-- for maximum temp
+a_temp=
+  LOAD '/home/cloudera/labs/CA1/surface-air-temperature-monthly-mean-daily-maximum.csv'
+  --LOAD '/user/cloudera/CA1pig/surface-air-temperature-monthly-mean-daily-maximum.csv'
+  USING PigStorage(',')
+  AS (Month:chararray, temp_mean_MAX:chararray);
+b_temp = FILTER a_temp by Month != 'month'; -- remove header
+
+c_temp = limit b_temp 10;
+dump c_temp;
+
+temp_max = foreach b_temp generate ToDate(Month,'yyyy-MM','Asia/Singapore') as temp_Date:datetime,(double) temp_mean_MAX as temp_mean_max:double;
+dump temp_max;
+
+-- date in ToDate format
+temp_max1 = FOREACH temp_max GENERATE temp_Date as date,GetYear(temp_Date) AS temp_year, GetMonth(temp_Date) as temp_month, temp_mean_max;
+dump temp_max1;
+
+
+
+-- for minimum temp
+d_temp=
+  LOAD '/home/cloudera/labs/CA1/surface-air-temperature-monthly-mean-daily-minimum.csv'
+  --LOAD '/user/cloudera/CA1pig/surface-air-temperature-monthly-mean-daily-minimum.csv'
+  USING PigStorage(',')
+  AS (Month:chararray, temp_mean_MIN:chararray);
+e_temp = FILTER d_temp by Month != 'month';
+
+f_temp = limit e_temp 10;
+dump f_temp;
+
+temp_min = foreach e_temp generate ToDate(Month,'yyyy-MM','Asia/Singapore') as temp_Date:datetime,(double) temp_mean_MIN as temp_mean_min:double;
+dump temp_min;
+
+-- date in ToDate format
+temp_min1 = FOREACH temp_min GENERATE temp_Date as date,GetYear(temp_Date) AS temp_year, GetMonth(temp_Date) as temp_month, temp_mean_min;
+dump temp_min1;
+
+
+
+-- join tables temp_max1 and temp_min1
+join_ByDate = join temp_max1 BY date , temp_min1 BY date;
+dump join_ByDate;
+
+-- Take out columns that you want only
+final = FOREACH join_ByDate GENERATE temp_max1::date AS temp_date,temp_max1::temp_year AS temp_year,temp_max1::temp_month AS temp_month,temp_max1::temp_mean_max as temp_max,temp_min1::temp_mean_min as temp_min;
+dump final;
+
+
+-- Store to hive (look at Hive Lab6 )
+-- Remove before store
+-- this will have effect of overwriting all data before storing the pig relation
+sh hdfs dfs -rm -r -f /bakeinc/weather/*
+
+STORE final INTO 'nsdba2_superstore.weather'
+USING org.apache.hive.hcatalog.pig.HCatStorer();
+
+
